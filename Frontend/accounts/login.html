@@ -1,0 +1,1359 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BookLy</title>
+    <link rel="shortcut icon" href="{% static 'Logo/favicon.ico' %}" type="image/x-icon">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@2.5.0/fonts/remixicon.css" rel="stylesheet">
+    
+    <style>
+        *, *:before, *:after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Poppins', sans-serif;
+            background: #f0f2f5;
+            overflow-x: hidden;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        /* Top Preloader Styles with animation */
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            z-index: 9999;
+            background-color: #f0f2f5;
+            overflow: hidden;
+        }
+        
+        .progress {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #5C6BC0, #7986CB, #9FA8DA);
+            background-size: 200% 100%;
+            animation: 
+                loading 2s ease-out forwards,
+                gradient-shift 2s linear infinite;
+        }
+        
+        @keyframes loading {
+            0% { width: 0; }
+            20% { width: 40%; }
+            50% { width: 60%; }
+            70% { width: 75%; }
+            85% { width: 90%; }
+            100% { width: 100%; }
+        }
+        
+        @keyframes gradient-shift {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .spinner {
+            display: none;
+            width: 1.5rem;
+            height: 1.5rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top: 2px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        .button-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .button-text {
+            display: inline-block;
+        }
+
+        /* Enhanced Loading Spinner for login */
+        .full-screen-spinner {
+            position: fixed;
+            inset: 0;
+            background-color: rgba(240, 242, 245, 0.9);
+            backdrop-filter: blur(4px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        
+        .full-screen-spinner.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .spinner-container {
+            position: relative;
+            width: 100px;
+            height: 100px;
+        }
+        
+        .spinner-outer {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            border: 4px solid transparent;
+            border-top-color: #5C6BC0;
+            border-radius: 50%;
+            animation: spin 1.5s linear infinite;
+        }
+        
+        .spinner-middle {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            top: 10px;
+            left: 10px;
+            border: 4px solid transparent;
+            border-top-color: #7986CB;
+            border-radius: 50%;
+            animation: spin 1.2s linear infinite reverse;
+        }
+        
+        .spinner-inner {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            top: 20px;
+            left: 20px;
+            border: 4px solid transparent;
+            border-top-color: #9FA8DA;
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+        }
+        
+        .spinner-shimmer {
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(92, 107, 192, 0.3) 0%, rgba(92, 107, 192, 0) 70%);
+            animation: pulse 1.5s ease-in-out infinite;
+            z-index: -1;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.1); }
+        }
+
+        /* Toast notification styles */
+        .toast {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            padding: 12px 20px;
+            background-color: #ffffff;
+            color: #1f2937;
+            border-radius: 8px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            max-width: 350px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .toast.success {
+            border-left: 4px solid #10B981;
+        }
+
+        .toast.error {
+            border-left: 4px solid #EF4444;
+        }
+
+        .toast.warning {
+            border-left: 4px solid #F59E0B;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .toast-icon {
+            margin-right: 12px;
+            font-size: 20px;
+        }
+
+        .toast-icon.success {
+            color: #10B981;
+        }
+
+        .toast-icon.error {
+            color: #EF4444;
+        }
+
+        .toast-icon.warning {
+            color: #F59E0B;
+        }
+
+        .toast-content {
+            flex: 1;
+        }
+
+        .toast-message {
+            margin: 0;
+            font-size: 14px;
+            color: #374151;
+        }
+
+        /* Form styling */
+        .form-input {
+            background-color: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            transition: all 0.3s ease;
+            width: 100%;
+            padding: 0.625rem 2.5rem;
+            border-radius: 0.5rem;
+            font-size: 15px;
+            color: #333;
+        }
+        
+        .form-input:hover {
+            border-color: #7986CB;
+            background-color: #fff;
+        }
+
+        .form-input:focus {
+            background-color: #fff;
+            border-color: #7986CB;
+            outline: none;
+        }
+
+        /* Magic particles */
+        .magic-particle {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: #5C6BC0;
+            pointer-events: none;
+            opacity: 0;
+            z-index: 9998;
+        }
+        
+        @keyframes particle-effect {
+            0% { transform: translate(0, 0) scale(1); opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+        }
+        
+        /* Logo animation */
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .floating {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        /* Login button */
+        .login-btn {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, #7986CB, #5C6BC0);
+            z-index: 1;
+            width: 100%;
+            padding: 0.75rem;
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        
+        .login-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #5C6BC0, #3F51B5);
+            transition: transform 0.5s ease;
+            z-index: -1;
+            transform: scaleX(0);
+            transform-origin: right;
+        }
+        
+        .login-btn:hover::before {
+            transform: scaleX(1);
+            transform-origin: left;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(92, 107, 192, 0.4);
+        }
+        
+        .login-btn:active {
+            transform: scale(0.98);
+        }
+
+        .login-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Login container */
+        .login-container {
+            width: 100%;
+            max-width: 28rem;
+        }
+
+        .login-card {
+            background-color: #ffffff;
+            padding: 2rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            border: 1px solid #e5e7eb;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .login-header img {
+            margin: 0 auto 1rem;
+            width: 5rem;
+            height: 5rem;
+        }
+
+        .login-header h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .login-error {
+            margin-top: 1rem;
+            color: #EF4444;
+            text-align: center;
+            font-size: 0.875rem;
+            display: none;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            color: #6b7280;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper i {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+            font-size: 1.125rem;
+        }
+
+        .input-wrapper i.left-icon {
+            left: 0.75rem;
+        }
+
+        .input-wrapper i.right-icon {
+            right: 0.75rem;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .input-wrapper i.right-icon:hover {
+            color: #5C6BC0;
+        }
+
+        .remember-forgot {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            color: #6b7280;
+        }
+
+        .remember-me input {
+            margin-right: 0.5rem;
+            accent-color: #5C6BC0;
+        }
+
+        .forgot-password {
+            color: #5C6BC0;
+            text-decoration: none;
+            transition: color 0.3s;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 0.875rem;
+        }
+
+        .forgot-password:hover {
+            color: #3F51B5;
+        }
+
+        /* Footer links */
+        .login-footer {
+            margin-top: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.875rem;
+        }
+
+        .login-footer a {
+            color: #6b7280;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            transition: color 0.3s;
+        }
+
+        .login-footer a:hover {
+            color: #5C6BC0;
+        }
+
+        .login-footer a i {
+            margin-right: 0.25rem;
+        }
+
+        /* Modal overlay */
+        .modal-overlay {
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            transform: scale(0.95);
+            opacity: 0;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            background-color: #ffffff;
+            padding: 2rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            border: 1px solid #e5e7eb;
+            width: 100%;
+            max-width: 28rem;
+            position: relative;
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        .step-transition {
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .step-hidden {
+            opacity: 0;
+            transform: translateY(10px);
+            pointer-events: none;
+            position: absolute;
+            inset: 0;
+            padding: 2rem;
+        }
+
+        .step-visible {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-subtitle {
+            color: #6b7280;
+            font-size: 0.875rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            color: #9ca3af;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.5rem;
+            transition: color 0.3s;
+        }
+
+        .modal-close:hover {
+            color: #1f2937;
+        }
+
+        .otp-input {
+            text-align: center;
+            font-size: 1.25rem;
+            letter-spacing: 0.25rem;
+        }
+
+        .resend-link {
+            text-align: center;
+            margin-top: 1rem;
+        }
+
+        .resend-link p {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        .resend-link button {
+            color: #5C6BC0;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .resend-link button:hover {
+            color: #3F51B5;
+        }
+
+        /* Rate limit overlay */
+        .rate-limit-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9998;
+        }
+        
+        .rate-limit-container {
+            background: white;
+            padding: 40px;
+            text-align: center;
+            border-radius: 12px;
+            max-width: 400px;
+            margin: 20px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+        
+        .countdown-timer {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #ef4444;
+            margin: 20px 0;
+        }
+
+        @keyframes shake {
+            0%, 100% {transform: translateX(0);}
+            10%, 30%, 50%, 70%, 90% {transform: translateX(-5px);}
+            20%, 40%, 60%, 80% {transform: translateX(5px);}
+        }
+
+        .shake {
+            animation: shake 0.5s;
+        }
+
+        @media (max-width: 640px) {
+            .login-footer {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+        }
+    </style>
+    
+</head>
+<body>
+    <!-- Top Preloader -->
+    <div class="progress-bar">
+        <div class="progress"></div>
+    </div>
+    
+    <!-- Enhanced Loading Spinner -->
+    <div id="fullScreenSpinner" class="full-screen-spinner">
+        <div class="spinner-container">
+            <div class="spinner-outer"></div>
+            <div class="spinner-middle"></div>
+            <div class="spinner-inner"></div>
+            <div class="spinner-shimmer"></div>
+        </div>
+        <div style="margin-top: 2rem; text-align: center; max-width: 28rem;">
+            <p style="font-size: 1.25rem; margin-bottom: 0.5rem; color: #1f2937; font-weight: 500;">Verifying your credentials...</p>
+            <p style="color: #6b7280;">Please wait while we're reviewing your details. This will only take a moment.</p>
+        </div>
+    </div>
+
+    <!-- Rate Limit Overlay -->
+    <div id="rateLimitOverlay" class="rate-limit-overlay">
+        <div class="rate-limit-container">
+            <i class="ri-time-line" style="font-size: 3rem; color: #ef4444; margin-bottom: 1rem; display: block;"></i>
+            <h3 style="font-size: 1.25rem; font-weight: bold; color: #1f2937; margin-bottom: 8px;">Too Many Failed Attempts</h3>
+            <p style="color: #6b7280; margin-bottom: 16px;">Please wait before trying again</p>
+            <div class="countdown-timer" id="countdownTimer">05:00</div>
+            <p style="font-size: 0.875rem; color: #9ca3af;">Your account will be unlocked after this time</p>
+        </div>
+    </div>
+    
+    <!-- Login form container -->
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <img src="{% static 'Logo/WithoutBg.png' %}" alt="Logo" class="floating" id="logoImage">
+                <h2>Welcome Back</h2>
+                <p id="loginError" class="login-error"></p>
+            </div>
+
+            <form id="loginForm">
+                {% csrf_token %}
+                
+                <!-- Hidden timestamp field to measure submission time -->
+                <input type="hidden" name="form_rendered_at" id="formRenderedAt" value="">
+                
+                <!-- Honeypot fields that should remain empty (bots tend to fill all fields) -->
+                <div style="display:none;">
+                    <input type="text" name="website" id="website" autocomplete="off">
+                    <input type="email" name="email_confirm" id="email_confirm" autocomplete="off">
+                </div>
+                
+                <div class="form-group">
+                    <label>Email</label>
+                    <div class="input-wrapper">
+                        <i class="ri-mail-line left-icon"></i>
+                        <input 
+                            type="email" 
+                            name="email"
+                            id="email"
+                            autocomplete="email"
+                            class="form-input"
+                            placeholder="Enter your email"
+                            required
+                        >
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Password</label>
+                    <div class="input-wrapper">
+                        <i class="ri-lock-line left-icon"></i>
+                        <input 
+                            type="password" 
+                            name="password"
+                            id="password"
+                            autocomplete="current-password"
+                            class="form-input"
+                            placeholder="Enter your password"
+                            required
+                        >
+                        <i class="ri-eye-off-line right-icon" id="togglePassword"></i>
+                    </div>
+                </div>
+
+                <div class="remember-forgot">
+                    <label class="remember-me">
+                        <input type="checkbox" name="remember_me">
+                        Remember me
+                    </label>
+                    <button type="button" onclick="showForgotPasswordModal()" class="forgot-password">
+                        Forgot Password?
+                    </button>
+                </div>
+
+                <button 
+                    type="submit"
+                    id="loginButton"
+                    class="login-btn"
+                    style="margin-top: 1rem;"
+                >
+                    <div class="button-content">
+                        <span class="button-text">Sign In</span>
+                        <div class="spinner" id="loginSpinner"></div>
+                    </div>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Forgot Password Modal -->
+    <div id="forgotPasswordModal" class="modal-overlay">
+        <div class="modal-content">
+            <!-- Step 1: Email Input -->
+            <div id="step1" class="step-transition step-visible">
+                <h3 class="modal-title">Reset Password</h3>
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <div class="input-wrapper">
+                        <i class="ri-mail-line left-icon"></i>
+                        <input 
+                            type="email" 
+                            id="resetEmail"
+                            autocomplete="email"
+                            class="form-input"
+                            placeholder="Enter your registered email"
+                        >
+                    </div>
+                </div>
+                <button onclick="sendOTP()" id="sendOtpButton" class="login-btn">
+                    <div class="button-content">
+                        <span class="button-text">Send OTP</span>
+                        <div class="spinner" id="sendOtpSpinner"></div>
+                    </div>
+                </button>
+            </div>
+    
+            <!-- Step 2: OTP Verification -->
+            <div id="step2" class="step-transition step-hidden">
+                <h3 class="modal-title">Enter OTP</h3>
+                <p class="modal-subtitle">We've sent a 6-digit code to your email</p>
+                
+                <div class="form-group">
+                    <input 
+                        type="text"
+                        id="otpInput"
+                        maxlength="6"
+                        autocomplete="off"
+                        placeholder="Enter 6-digit OTP"
+                        class="form-input otp-input"
+                    >
+                </div>
+
+                <button onclick="verifyOTP()" id="verifyOtpButton" class="login-btn">
+                    <div class="button-content">
+                        <span class="button-text">Verify OTP</span>
+                        <div class="spinner" id="verifyOtpSpinner"></div>
+                    </div>
+                </button>
+
+                <div class="resend-link">
+                    <p>
+                        Didn't receive the code? 
+                        <button onclick="sendOTP()">Resend</button>
+                    </p>
+                </div>
+            </div>
+    
+            <!-- Step 3: New Password -->
+            <div id="step3" class="step-transition step-hidden">
+                <h3 class="modal-title">Set New Password</h3>
+                <div class="form-group">
+                    <label>New Password</label>
+                    <div class="input-wrapper">
+                        <i class="ri-lock-line left-icon"></i>
+                        <input 
+                            type="password" 
+                            id="newPassword"
+                            autocomplete="off"
+                            class="form-input"
+                            placeholder="Enter new password"
+                        >
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Confirm Password</label>
+                    <div class="input-wrapper">
+                        <i class="ri-lock-line left-icon"></i>
+                        <input 
+                            type="password" 
+                            id="confirmPassword"
+                            autocomplete="off"
+                            class="form-input"
+                            placeholder="Confirm new password"
+                        >
+                    </div>
+                </div>
+                <button onclick="resetPassword()" id="resetPasswordButton" class="login-btn">
+                    <div class="button-content">
+                        <span class="button-text">Reset Password</span>
+                        <div class="spinner" id="resetPasswordSpinner"></div>
+                    </div>
+                </button>
+            </div>
+    
+            <!-- Close button -->
+            <button onclick="closeModal()" class="modal-close">
+                <i class="ri-close-line"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <div class="toast-icon" id="toastIconContainer">
+            <i id="toastIcon" class="ri-error-warning-line"></i>
+        </div>
+        <div class="toast-content">
+            <p id="toastMessage" class="toast-message"></p>
+        </div>
+    </div>
+
+    <script>
+        // Set the timestamp when the page loads
+        document.getElementById('formRenderedAt').value = Date.now();
+
+        const modal = document.getElementById('forgotPasswordModal');
+        const step1 = document.getElementById('step1');
+        const step2 = document.getElementById('step2');
+        const step3 = document.getElementById('step3');
+        const logoImage = document.getElementById('logoImage');
+        const fullScreenSpinner = document.getElementById('fullScreenSpinner');
+        
+        let countdownInterval;
+
+        // Check if we're in a development environment
+        const isDevelopment = window.location.hostname === 'localhost' || 
+                              window.location.hostname === '127.0.0.1' ||
+                              window.location.port === '8000';
+        
+        // Create magic particles effect
+        function createMagicParticles(x, y) {
+            for (let i = 0; i < 8; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('magic-particle');
+                
+                const startX = x;
+                const startY = y;
+                
+                const tx = (Math.random() - 0.5) * 120;
+                const ty = (Math.random() - 0.5) * 120;
+                
+                particle.style.setProperty('--tx', `${tx}px`);
+                particle.style.setProperty('--ty', `${ty}px`);
+                
+                const colors = ['#5C6BC0', '#7986CB', '#9FA8DA', '#3F51B5'];
+                particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                
+                particle.style.left = `${startX}px`;
+                particle.style.top = `${startY}px`;
+                
+                document.body.appendChild(particle);
+                
+                setTimeout(() => {
+                    particle.style.animation = `particle-effect ${0.5 + Math.random() * 1}s forwards ease-out`;
+                }, 0);
+                
+                setTimeout(() => {
+                    particle.remove();
+                }, 2000);
+            }
+        }
+        
+        // Toast notification function
+        function showToast(message, type = 'error') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            const toastIcon = document.getElementById('toastIcon');
+            const toastIconContainer = document.getElementById('toastIconContainer');
+            
+            toast.classList.remove('success', 'error', 'warning');
+            toastIconContainer.classList.remove('success', 'error', 'warning');
+            
+            toast.classList.add(type);
+            toastIconContainer.classList.add(type);
+            
+            if (type === 'success') {
+                toastIcon.className = 'ri-checkbox-circle-line';
+            } else if (type === 'warning') {
+                toastIcon.className = 'ri-error-warning-line';
+            } else {
+                toastIcon.className = 'ri-error-warning-line';
+            }
+            
+            toastMessage.textContent = message;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+        
+        // Show full screen spinner
+        function showFullScreenSpinner() {
+            fullScreenSpinner.classList.add('active');
+        }
+        
+        // Hide full screen spinner
+        function hideFullScreenSpinner() {
+            fullScreenSpinner.classList.remove('active');
+        }
+
+        function startRateLimitTimer(seconds) {
+            const overlay = document.getElementById('rateLimitOverlay');
+            const timer = document.getElementById('countdownTimer');
+            const loginForm = document.getElementById('loginForm');
+            const loginButton = document.getElementById('loginButton');
+            
+            loginForm.style.pointerEvents = 'none';
+            loginForm.style.opacity = '0.5';
+            loginButton.disabled = true;
+            overlay.style.display = 'flex';
+            
+            countdownInterval = setInterval(() => {
+                const minutes = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                timer.textContent = `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                
+                if (seconds <= 0) {
+                    clearInterval(countdownInterval);
+                    loginForm.style.pointerEvents = 'auto';
+                    loginForm.style.opacity = '1';
+                    loginButton.disabled = false;
+                    overlay.style.display = 'none';
+                }
+                
+                seconds--;
+            }, 1000);
+        }
+        
+        function showForgotPasswordModal() {
+            modal.classList.add('active');
+            setTimeout(() => {
+                document.getElementById('resetEmail').focus();
+            }, 300);
+        }
+        
+        function closeModal() {
+            modal.classList.remove('active');
+            setTimeout(() => {
+                resetSteps();
+            }, 300);
+        }
+        
+        function resetSteps() {
+            document.querySelectorAll('input').forEach(input => {
+                if (input.id !== 'email' && input.id !== 'password') {
+                    input.value = '';
+                }
+            });
+            step1.classList.remove('step-hidden');
+            step1.classList.add('step-visible');
+            step2.classList.add('step-hidden');
+            step2.classList.remove('step-visible');
+            step3.classList.add('step-hidden');
+            step3.classList.remove('step-visible');
+        }
+        
+        function switchToStep(hideStep, showStep) {
+            hideStep.classList.remove('step-visible');
+            hideStep.classList.add('step-hidden');
+            
+            setTimeout(() => {
+                showStep.classList.remove('step-hidden');
+                showStep.classList.add('step-visible');
+            }, 300);
+        }
+        
+        async function sendOTP() {
+            const email = document.getElementById('resetEmail').value;
+            const button = document.getElementById('sendOtpButton');
+            const spinner = document.getElementById('sendOtpSpinner');
+            const buttonText = button.querySelector('.button-text');
+        
+            if (!email) {
+                showToast('Please enter your email address', 'error');
+                return;
+            }
+        
+            button.disabled = true;
+            spinner.style.display = 'block';
+            buttonText.textContent = 'Sending...';
+        
+            try {
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                
+                const response = await fetch('/send-otp/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({ email })
+                });
+                
+                const data = await response.json();
+                if (response.ok) {
+                    showToast('OTP sent successfully! Check your email', 'success');
+                    switchToStep(step1, step2);
+                    setTimeout(() => {
+                        document.getElementById('otpInput').focus();
+                    }, 300);
+                } else {
+                    showToast(data.error || 'Error sending OTP', 'error');
+                }
+            } catch (error) {
+                console.error('Error sending OTP:', error);
+                showToast('Error sending OTP', 'error');
+            } finally {
+                button.disabled = false;
+                spinner.style.display = 'none';
+                buttonText.textContent = 'Send OTP';
+            }
+        }
+        
+        async function verifyOTP() {
+            const otpInput = document.getElementById('otpInput');
+            const otp = otpInput.value;
+            const email = document.getElementById('resetEmail').value;
+            const button = document.getElementById('verifyOtpButton');
+            const spinner = document.getElementById('verifyOtpSpinner');
+            const buttonText = button.querySelector('.button-text');
+        
+            if (otp.length !== 6) {
+                showToast('Please enter the complete 6-digit OTP', 'error');
+                return;
+            }
+        
+            button.disabled = true;
+            spinner.style.display = 'block';
+            buttonText.textContent = 'Verifying...';
+        
+            try {
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                
+                const response = await fetch('/verify-otp/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({ email, otp })
+                });
+                
+                if (!response.ok) {
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        const data = await response.json();
+                        throw new Error(data.error || `Error: ${response.status}`);
+                    } else {
+                        const text = await response.text();
+                        console.error('Server returned non-JSON response:', text.substring(0, 150) + '...');
+                        throw new Error(`Server error (${response.status})`);
+                    }
+                }
+                
+                const data = await response.json();
+                
+                showToast('OTP verified successfully!', 'success');
+                switchToStep(step2, step3);
+                setTimeout(() => {
+                    document.getElementById('newPassword').focus();
+                }, 300);
+            } catch (error) {
+                console.error('Error verifying OTP:', error);
+                showToast(error.message || 'Error verifying OTP', 'error');
+            } finally {
+                button.disabled = false;
+                spinner.style.display = 'none';
+                buttonText.textContent = 'Verify OTP';
+            }
+        }
+        
+        async function resetPassword() {
+            const email = document.getElementById('resetEmail').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const button = document.getElementById('resetPasswordButton');
+            const spinner = document.getElementById('resetPasswordSpinner');
+            const buttonText = button.querySelector('.button-text');
+        
+            if (newPassword !== confirmPassword) {
+                showToast('Passwords do not match', 'error');
+                return;
+            }
+        
+            if (newPassword.length < 8) {
+                showToast('Password must be at least 8 characters long', 'error');
+                return;
+            }
+            
+            const hasDigit = /[0-9]/.test(newPassword);
+            const hasLetter = /[a-zA-Z]/.test(newPassword);
+            
+            if (!(hasDigit && hasLetter)) {
+                showToast('Password must contain both letters and numbers', 'error');
+                return;
+            }
+        
+            button.disabled = true;
+            spinner.style.display = 'block';
+            buttonText.textContent = 'Changing Password...';
+        
+            try {
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                
+                const response = await fetch('/reset-password/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({ 
+                        email, 
+                        new_password: newPassword 
+                    })
+                });
+                
+                const responseData = await response.json();
+                
+                if (response.ok) {
+                    showToast('Password changed successfully! Please log in with your new password.', 'success');
+                    
+                    setTimeout(() => {
+                        closeModal();
+                        window.location.reload();
+                    }, 2000);
+                } else {
+                    showToast(responseData.error || 'Error resetting password', 'error');
+                }
+            } catch (error) {
+                console.error('Error resetting password:', error);
+                showToast('Error resetting password', 'error');
+            } finally {
+                button.disabled = false;
+                spinner.style.display = 'none';
+                buttonText.textContent = 'Reset Password';
+            }
+        }
+        
+        // AJAX Login Form Submission with anti-bot and security features
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const button = document.getElementById('loginButton');
+            const spinner = document.getElementById('loginSpinner');
+            const buttonText = button.querySelector('.button-text');
+            
+            // Check honeypot fields - they should be empty
+            if (document.getElementById('website').value !== '' || 
+                document.getElementById('email_confirm').value !== '') {
+                return false;
+            }
+            
+            // Check if the form was submitted too quickly (less than 2 seconds)
+            const renderedAt = parseInt(document.getElementById('formRenderedAt').value);
+            const submittedAt = Date.now();
+            const timeElapsed = submittedAt - renderedAt;
+            
+            if (timeElapsed < 2000) {
+                showToast('Please review your information before submitting', 'error');
+                return false;
+            }
+            
+            // Start loading state
+            button.disabled = true;
+            spinner.style.display = 'block';
+            buttonText.textContent = 'Signing In...';
+            
+            // Show the full screen loading spinner with message
+            showFullScreenSpinner();
+            
+            try {
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                
+                const formData = new URLSearchParams({
+                    'csrfmiddlewaretoken': csrfToken,
+                    'email': email,
+                    'password': password,
+                    'remember_me': document.querySelector('input[name="remember_me"]').checked ? 'on' : 'off',
+                    'form_rendered_at': document.getElementById('formRenderedAt').value
+                });
+                
+                const response = await fetch('', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: formData
+                });
+                
+                const responseText = await response.text();
+                
+                let data;
+                try {
+                    data = JSON.parse(responseText);
+                } catch (error) {
+                    console.error("Failed to parse response as JSON:", error);
+                    data = { 
+                        success: false, 
+                        message: 'Server returned an invalid response' 
+                    };
+                }
+                
+                if (data.success) {
+                    showToast('Login successful! Redirecting...', 'success');
+                    
+                    // Add success animation
+                    const formContainer = document.querySelector('.login-card');
+                    formContainer.style.transition = 'transform 0.5s ease, 0.5s ease';
+                    formContainer.style.boxShadow = '0 0 30px rgba(92, 107, 192, 0.5)';
+                    formContainer.style.transform = 'scale(1.02)';
+                    
+                    // Create success particles
+                    const rect = button.getBoundingClientRect();
+                    createMagicParticles(rect.left + rect.width/2, rect.top + rect.height/2);
+                    
+                    setTimeout(() => {
+                        window.location.href = data.redirect_url || '/dashboard/';
+                    }, 2000);
+                } else {
+                    hideFullScreenSpinner();
+                    
+                    if (data.rate_limited && data.lockout_time) {
+                        startRateLimitTimer(data.lockout_time);
+                    } else {
+                        showToast(data.message || 'Login failed', 'error');
+                    }
+                    
+                    // Shake the form on error
+                    const formContainer = document.querySelector('.login-card');
+                    formContainer.classList.add('shake');
+                    setTimeout(() => {
+                        formContainer.classList.remove('shake');
+                    }, 500);
+                }
+            } catch (error) {
+                console.error('Error during login:', error);
+                hideFullScreenSpinner();
+                showToast('An error occurred. Please try again.', 'error');
+            } finally {
+                if (!fullScreenSpinner.classList.contains('active')) {
+                    button.disabled = false;
+                    spinner.style.display = 'none';
+                    buttonText.textContent = 'Sign In';
+                }
+            }
+        });
+        
+        // Close modal when clicking outside
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+        
+        // Toggle password visibility
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            const passwordInput = document.getElementById('password');
+            const icon = this;
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.className = 'ri-eye-line right-icon';
+            } else {
+                passwordInput.type = 'password';
+                icon.className = 'ri-eye-off-line right-icon';
+            }
+        });
+        
+        // Click effect on logo
+        logoImage.addEventListener('click', function() {
+            const rect = logoImage.getBoundingClientRect();
+            const centerX = rect.left + rect.width/2;
+            const centerY = rect.top + rect.height/2;
+            createMagicParticles(centerX, centerY);
+        });
+        
+        // Initialize page when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Hide preloader
+            setTimeout(() => {
+                const progressBar = document.querySelector('.progress-bar');
+                if (progressBar) {
+                    progressBar.style.opacity = '0';
+                    setTimeout(() => {
+                        progressBar.style.display = 'none';
+                    }, 500);
+                }
+            }, 2000);
+            
+            // Focus email field
+            const emailField = document.getElementById('email');
+            if (emailField) {
+                emailField.focus();
+            }
+        });
+    </script>
+    <script src="{% static 'Block/app.js' %}"></script>
+</body>
+</html>
